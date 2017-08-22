@@ -1,4 +1,9 @@
 {
+    "name": "kuridza/api-starter",
+    "description": "Simple silex api.",
+    "authors": [{
+        "name": "Nikola Kuridza"
+    }],
     "require": {
         "php": ">=5.5.9",
         "doctrine/dbal": "^2.5",

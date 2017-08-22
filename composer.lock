@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "15a126defb9b6163ad98fdf28b0836ba",
-    "content-hash": "c783609da0796ffff7415d9adee2f909",
+    "hash": "d833c1f805cce6ae1c02c3d215f33332",
+    "content-hash": "d85dd369dea3cdf4f42e7e0473858649",
     "packages": [
         {
             "name": "basster/silex-simple-swagger-provider",
