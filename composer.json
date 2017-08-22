@@ -1,0 +1,9 @@
+{
+    "require": {
+        "php": ">=5.5.9",
+        "doctrine/dbal": "^2.5",
+        "guzzlehttp/guzzle": "^6.3",
+        "silex/silex": "^2.2",
+        "basster/silex-simple-swagger-provider": "2.0"
+    }
+}
