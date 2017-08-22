@@ -1,5 +1,4 @@
 # API starter
-=============
 
 Setup
 -----
