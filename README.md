@@ -1,5 +1,7 @@
 # API starter
 
+Simple silex api.
+
 Setup
 -----
 * clone or download
@@ -17,4 +19,5 @@ $ php -S localhost:8000
 $ php tests.php
 ```
 OR
+
 open `tests.php` in browser. Note that build-in server can't handle multiple request so run another instance and try tests on `localhost:8001/tests.php`
