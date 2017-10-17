@@ -65,6 +65,43 @@ $response = $client->delete('/book/' . $id, ['auth' => ['nikola', '1234']]);
 
 testOutput($response->getStatusCode(), 204, 'Delete request', 'DELETE /book', $response->getBody());
 
+$response = $client->post('/batch/book', [
+    'auth' => ['nikola', '1234'],
+    'json' => [
+        ['title' => 'Telefonoteka', 'author' => 'TFT', 'year' => 2016],
+        ['title' => 'Telefonoteka', 'author' => 'TFT', 'year' => 2016],
+        ['title' => 'Telefonoteka', 'author' => 'TFT', 'year' => 2016],
+    ],
+]);
+
+$json = \GuzzleHttp\json_decode($response->getBody(), true);
+$ids = array_column($json, 'id');
+
+testOutput($response->getStatusCode(), 200, 'Batch insert request', 'POST /batch-book', $response->getBody());
+
+$response = $client->patch('/batch/book', [
+    'auth' => ['nikola', '1234'],
+    'json' => [
+        ['id' => $ids[0], 'title' => 'Telefonoteka1', 'author' => 'TFT', 'year' => 2016],
+        ['id' => $ids[1], 'title' => 'Telefonoteka2', 'author' => 'LCD', 'year' => 2016],
+        ['id' => $ids[2], 'title' => 'Telefonoteka3', 'author' => 'OSD'],
+    ],
+]);
+
+testOutput($response->getStatusCode(), 200, 'Batch update request', 'PATCH /batch-book', $response->getBody());
+
+$response = $client->delete('/batch/book', [
+    'auth' => ['nikola', '1234'],
+    'json' => [
+        ['id' => $ids[0]],
+        ['id' => $ids[1]],
+        ['id' => $ids[2]],
+    ],
+]);
+
+testOutput($response->getStatusCode(), 204, 'Batch delete request', 'DELETE /batch-book', $response->getBody());
+
+
 echo 'Passed test: ' . $passed . PHP_EOL;
 echo 'Failed test: ' . $failed . '<hr>';
 

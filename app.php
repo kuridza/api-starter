@@ -96,32 +96,63 @@ $app->get('/{resource}', function(Request $request, Application $app, $resource)
     $books->setMaxResults($max)->setFirstResult(($request->get('page', 1) - 1) * $max);
     $books = $books->execute()->fetchAll();
     return new JsonResponse($books);
-})->bind('all-books');
+})->bind('all');
 
 $app->get('/{resource}/{id}', function(Application $app, $resource, $id) {
     return new JsonResponse($app['fetch']($id, $resource));
-})->bind('single-book');
+})->bind('single');
 
 $app->post('/{resource}', function(Request $request, Application $app, $resource) {
     /** @var Connection $conn */
     $conn = $app['db'];
     $conn->insert($resource, $request->request->all());
     return new JsonResponse($app['fetch']($conn->lastInsertId(), $resource));
-})->before($check)->bind('insert-book');
+})->before($check)->bind('insert');
+
+$app->post('/batch/{resource}', function(Request $request, Application $app, $resource) {
+    /** @var Connection $conn */
+    $conn = $app['db'];
+    $inserted = [];
+    foreach ($request->request->all() as $row) {
+        $conn->insert($resource, $row);
+        $inserted[] = $app['fetch']($conn->lastInsertId(), $resource);
+    }
+    return new JsonResponse($inserted);
+})->before($check)->bind('batch-insert');
+
+$app->patch('/batch/{resource}', function(Request $request, Application $app, $resource) {
+    /** @var Connection $conn */
+    $conn = $app['db'];
+    $updated = [];
+    foreach ($request->request->all() as $row) {
+        $conn->update($resource, $row, ['id' => $row['id']]);
+        $updated[] = $app['fetch']($row['id'], $resource);
+    }
+    return new JsonResponse($updated);
+})->before($check)->bind('batch-update');
 
 $app->patch('/{resource}/{id}', function(Request $request, Application $app, $resource, $id) {
     /** @var Connection $conn */
     $conn = $app['db'];
     $conn->update($resource, $request->request->all(), ['id' => $id]);
     return new JsonResponse($app['fetch']($id, $resource));
-})->before($check)->bind('update-book');
+})->before($check)->bind('update');
+
+$app->delete('/batch/{resource}', function(Application $app, Request $request, $resource) {
+    /** @var Connection $conn */
+    $conn = $app['db'];
+    foreach ($request->request->all() as $row) {
+        $conn->delete($resource, ['id' => $row['id']]);
+    }
+    return new Response('', 204);
+})->before($check)->bind('batch-delete');
 
 $app->delete('/{resource}/{id}', function(Application $app, $resource, $id) {
     /** @var Connection $conn */
     $conn = $app['db'];
     $conn->delete($resource, ['id' => $id]);
     return new Response('', 204);
-})->before($check)->bind('delete-book');
+})->before($check)->bind('delete');
 
 $app->post('/create/{resource}', function(Application $app, Request $request, $resource) {
     /** @var Connection $conn */
