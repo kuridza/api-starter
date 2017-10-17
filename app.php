@@ -82,11 +82,17 @@ $app->post('/register', function(Request $request, Application $app) {
 $app->get('/{resource}', function(Request $request, Application $app, $resource) {
     /** @var Connection $conn */
     $conn = $app['db'];
-    $books = $conn->createQueryBuilder()->select('*')->from($resource)
-        ->where('title LIKE :t OR year = :y')
-        ->setParameter('t', '%' . $request->get('title') . '%')
-        ->setParameter('y', $request->get('year'))
-        ->execute()->fetchAll();
+    $books = $conn->createQueryBuilder()->select('*')->from($resource);
+
+    $fields = $conn->getSchemaManager()->listTableColumns($resource);
+    $fields = array_keys($fields);
+
+    foreach($request->query->all() as $key => $value) {
+        if(! in_array($key, $fields)) { continue; }
+        $books->andWhere($key . ' LIKE :v')
+            ->setParameter('v', '%' . $value . '%');
+    }
+    $books = $books->execute()->fetchAll();
     return new JsonResponse($books);
 })->bind('all-books');
 
@@ -115,5 +121,22 @@ $app->delete('/{resource}/{id}', function(Application $app, $resource, $id) {
     $conn->delete($resource, ['id' => $id]);
     return new Response('', 204);
 })->before($check)->bind('delete-book');
+
+$app->post('/create/{resource}', function(Application $app, Request $request, $resource) {
+    /** @var Connection $conn */
+    $conn = $app['db'];
+    $schema = new \Doctrine\DBAL\Schema\Schema();
+    $table = $schema->createTable($resource);
+    $table->addColumn('id', 'integer');
+    $table->setPrimaryKey(['id']);
+    foreach ($request->request->all() as $column => $type) {
+        $table->addColumn($column, $type);
+    }
+    $queries = $schema->toSql(new \Doctrine\DBAL\Platforms\SqlitePlatform());
+    foreach ($queries as $query) {
+        $conn->exec($query);
+    }
+    return new JsonResponse($request->request->all());
+});
 
 return $app;
