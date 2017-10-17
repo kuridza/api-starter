@@ -66,7 +66,19 @@ $app->get('/', function(Request $request, Application $app) {
             'methods' => $route->getMethods(),
         ];
     }
-    return new JsonResponse(['routes' => $routes]);
+    /** @var Connection $conn */
+    $conn = $app['db'];
+    $schema = [];
+    $s = $conn->getSchemaManager()->listTableNames();
+    foreach ($s as $table) {
+        $columns = $conn->getSchemaManager()->listTableColumns($table);
+        foreach ($columns as $column) {
+            $schema[$table][] = $column->getName();
+        }
+
+    }
+
+    return new JsonResponse(['schema' => $schema, 'routes' => $routes]);
 })->bind('api-routes');
 
 $app->post('/register', function(Request $request, Application $app) {
