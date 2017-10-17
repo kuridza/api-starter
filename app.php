@@ -34,7 +34,7 @@ $app->before(function (Request $request) {
     }
 });
 
-$app['fetch'] = $app->protect(function($id, $resource = 'book') use ($app) {
+$app['fetch'] = $app->protect(function($id, $resource) use ($app) {
     /** @var Connection $conn */
     $conn = $app['db'];
     $book = $conn->createQueryBuilder()->select('*')->from($resource)
@@ -87,24 +87,26 @@ $app->get('/{resource}', function(Request $request, Application $app, $resource)
     $fields = $conn->getSchemaManager()->listTableColumns($resource);
     $fields = array_keys($fields);
 
-    foreach($request->query->all() as $key => $value) {
+    foreach($request->query->get('filter') as $key => $value) {
         if(! in_array($key, $fields)) { continue; }
         $books->andWhere($key . ' LIKE :v')
             ->setParameter('v', '%' . $value . '%');
     }
+    $max = 10;
+    $books->setMaxResults($max)->setFirstResult(($request->get('page', 1) - 1) * $max);
     $books = $books->execute()->fetchAll();
     return new JsonResponse($books);
 })->bind('all-books');
 
 $app->get('/{resource}/{id}', function(Application $app, $resource, $id) {
-    return new JsonResponse($app['fetch']($id));
+    return new JsonResponse($app['fetch']($id), $resource);
 })->bind('single-book');
 
 $app->post('/{resource}', function(Request $request, Application $app, $resource) {
     /** @var Connection $conn */
     $conn = $app['db'];
     $conn->insert($resource, $request->request->all());
-    return new JsonResponse($app['fetch']($conn->lastInsertId()));
+    return new JsonResponse($app['fetch']($conn->lastInsertId(), $resource));
 })->before($check)->bind('insert-book');
 
 $app->patch('/{resource}/{id}', function(Request $request, Application $app, $resource, $id) {
@@ -112,7 +114,7 @@ $app->patch('/{resource}/{id}', function(Request $request, Application $app, $re
     /** @var Connection $conn */
     $conn = $app['db'];
     $conn->update($resource, $request->request->all(), ['id' => $id]);
-    return new JsonResponse($app['fetch']($id));
+    return new JsonResponse($app['fetch']($id, $resource));
 })->before($check)->bind('update-book');
 
 $app->delete('/{resource}/{id}', function(Application $app, $resource, $id) {
