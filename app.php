@@ -87,7 +87,7 @@ $app->get('/{resource}', function(Request $request, Application $app, $resource)
     $fields = $conn->getSchemaManager()->listTableColumns($resource);
     $fields = array_keys($fields);
 
-    foreach($request->query->get('filter') as $key => $value) {
+    foreach($request->query->get('filter', []) as $key => $value) {
         if(! in_array($key, $fields)) { continue; }
         $books->andWhere($key . ' LIKE :v')
             ->setParameter('v', '%' . $value . '%');
@@ -99,7 +99,7 @@ $app->get('/{resource}', function(Request $request, Application $app, $resource)
 })->bind('all-books');
 
 $app->get('/{resource}/{id}', function(Application $app, $resource, $id) {
-    return new JsonResponse($app['fetch']($id), $resource);
+    return new JsonResponse($app['fetch']($id, $resource));
 })->bind('single-book');
 
 $app->post('/{resource}', function(Request $request, Application $app, $resource) {
@@ -110,7 +110,6 @@ $app->post('/{resource}', function(Request $request, Application $app, $resource
 })->before($check)->bind('insert-book');
 
 $app->patch('/{resource}/{id}', function(Request $request, Application $app, $resource, $id) {
-    $app['fetch']($id);
     /** @var Connection $conn */
     $conn = $app['db'];
     $conn->update($resource, $request->request->all(), ['id' => $id]);
