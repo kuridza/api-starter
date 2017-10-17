@@ -37,12 +37,12 @@ $app->before(function (Request $request) {
 $app['fetch'] = $app->protect(function($id, $resource) use ($app) {
     /** @var Connection $conn */
     $conn = $app['db'];
-    $book = $conn->createQueryBuilder()->select('*')->from($resource)
+    $item = $conn->createQueryBuilder()->select('*')->from($resource)
         ->where('id = :id')->setParameter('id', $id)->execute()->fetch();
-    if(! $book) {
+    if(! $item) {
         $app->abort(404, 'Not found.');
     }
-    return $book;
+    return $item;
 });
 
 $check = function (Request $request, Application $app) {
@@ -82,20 +82,20 @@ $app->post('/register', function(Request $request, Application $app) {
 $app->get('/{resource}', function(Request $request, Application $app, $resource) {
     /** @var Connection $conn */
     $conn = $app['db'];
-    $books = $conn->createQueryBuilder()->select('*')->from($resource);
+    $items = $conn->createQueryBuilder()->select('*')->from($resource);
 
     $fields = $conn->getSchemaManager()->listTableColumns($resource);
     $fields = array_keys($fields);
 
     foreach($request->query->get('filter', []) as $key => $value) {
         if(! in_array($key, $fields)) { continue; }
-        $books->andWhere($key . ' LIKE :v')
+        $items->andWhere($key . ' LIKE :v')
             ->setParameter('v', '%' . $value . '%');
     }
     $max = 10;
-    $books->setMaxResults($max)->setFirstResult(($request->get('page', 1) - 1) * $max);
-    $books = $books->execute()->fetchAll();
-    return new JsonResponse($books);
+    $items->setMaxResults($max)->setFirstResult(($request->get('page', 1) - 1) * $max);
+    $items = $items->execute()->fetchAll();
+    return new JsonResponse($items);
 })->bind('all');
 
 $app->get('/{resource}/{id}', function(Application $app, $resource, $id) {
