@@ -8,7 +8,6 @@ $passed = 0;
 $failed = 0;
 $output = '';
 $body = '';
-//function testOutput($input, $expected, $message, $request, $body) {
 function testOutput($message, $method, $path, $data = [], $expected = 200) {
     global $passed, $failed, $output, $client, $body;
     $response = $client->{$method}($path, $data);
